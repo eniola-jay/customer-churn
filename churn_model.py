@@ -9,18 +9,14 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-# -----------------------------
-# Load Dataset
-# -----------------------------
+# Load dataset
 df = pd.read_csv("mtn_customer_churn.csv")
 
 # Clean column names
 df.columns = df.columns.str.replace("\ufeff", "", regex=False).str.strip()
 
-# Clean target column
+# Clean target
 df["Customer Churn Status"] = df["Customer Churn Status"].astype(str).str.strip()
-
-# Convert target to numeric
 df["Customer Churn Status"] = df["Customer Churn Status"].map({"Yes": 1, "No": 0})
 
 # Convert numeric columns
@@ -37,9 +33,7 @@ numeric_cols = [
 for col in numeric_cols:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 
-# -----------------------------
-# Select Features
-# -----------------------------
+# Select features
 features = [
     "Age",
     "State",
@@ -60,9 +54,6 @@ target = "Customer Churn Status"
 X = df[features]
 y = df[target]
 
-# -----------------------------
-# Split Features by Type
-# -----------------------------
 categorical_features = [
     "State",
     "MTN Device",
@@ -81,9 +72,7 @@ numerical_features = [
     "Data Usage"
 ]
 
-# -----------------------------
 # Preprocessing
-# -----------------------------
 numeric_transformer = Pipeline(steps=[
     ("imputer", SimpleImputer(strategy="median")),
     ("scaler", StandardScaler())
@@ -99,17 +88,13 @@ preprocessor = ColumnTransformer(transformers=[
     ("cat", categorical_transformer, categorical_features)
 ])
 
-# -----------------------------
-# Model Pipeline
-# -----------------------------
+# Model pipeline
 model = Pipeline(steps=[
     ("preprocessor", preprocessor),
     ("classifier", LogisticRegression(max_iter=1000))
 ])
 
-# -----------------------------
-# Train/Test Split
-# -----------------------------
+# Train/test split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y,
     test_size=0.2,
@@ -117,14 +102,10 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
-# -----------------------------
-# Train Model
-# -----------------------------
+# Train
 model.fit(X_train, y_train)
 
-# -----------------------------
-# Evaluate Model
-# -----------------------------
+# Evaluate
 y_pred = model.predict(X_test)
 
 accuracy = accuracy_score(y_test, y_pred)
@@ -133,8 +114,6 @@ print("\nClassification Report:\n")
 print(classification_report(y_test, y_pred))
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 
-# -----------------------------
-# Save Model
-# -----------------------------
+# Save model
 joblib.dump(model, "churn_model.pkl")
 print("\nModel saved successfully as churn_model.pkl")

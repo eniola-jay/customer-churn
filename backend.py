@@ -3,7 +3,7 @@ import pandas as pd
 def load_data():
     df = pd.read_csv("mtn_customer_churn.csv")
 
-    # Clean column names properly
+    # Clean column names
     df.columns = df.columns.str.replace("\ufeff", "", regex=False).str.strip()
 
     # Convert date

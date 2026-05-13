@@ -19,8 +19,6 @@ df.columns = df.columns.str.replace("\ufeff", "", regex=False).str.strip()
 
 # Clean target column
 df["Customer Churn Status"] = df["Customer Churn Status"].astype(str).str.strip()
-
-# Convert target to numeric
 df["Customer Churn Status"] = df["Customer Churn Status"].map({"Yes": 1, "No": 0})
 
 # Convert numeric columns

@@ -21,35 +21,16 @@ st.set_page_config(
 # -----------------------------
 df = load_data()
 
-# -----------------------------
-# Theme state
-# -----------------------------
-if "theme" not in st.session_state:
-    st.session_state.theme = "Light"
 
-# -----------------------------
-# Theme colors
-# -----------------------------
-if st.session_state.theme == "Dark":
-    bg_color = "#121417"
-    text_color = "#F5F7FA"
-    card_bg = "#1B1F24"
-    border_color = "#2B3138"
-    primary_color = "#C8A95B"
-    secondary_color = "#232931"
-    muted_color = "#B8C0CC"
-    chart_text = "white"
-    sidebar_text = "#F5F7FA"
-else:
-    bg_color = "#F7F7F5"
-    text_color = "#1F2933"
-    card_bg = "#FFFFFF"
-    border_color = "#D9E2EC"
-    primary_color = "#4F6F52"
-    secondary_color = "#E8EFEA"
-    muted_color = "#6B7280"
-    chart_text = "black"
-    sidebar_text = "#1F2933"
+bg_color = "#F7F7F5"
+text_color = "#1F2933"
+card_bg = "#FFFFFF"
+border_color = "#D9E2EC"
+primary_color = "#4F6F52"
+secondary_color = "#E8EFEA"
+muted_color = "#6B7280"
+chart_text = "black"
+sidebar_text = "#1F2933"
 
 # -----------------------------
 # Custom CSS
@@ -113,13 +94,6 @@ with st.sidebar:
     )
 
     st.markdown("## Navigation")
-
-    theme_toggle = st.toggle(
-        "Dark Mode",
-        value=(st.session_state.theme == "Dark")
-    )
-
-    st.session_state.theme = "Dark" if theme_toggle else "Light"
 
     page = st.radio(
         "Go to",

@@ -220,6 +220,52 @@ elif page == "Predictions":
     a3.metric("Recall", model_metrics["recall"])
     a4.metric("F1 Score", model_metrics["f1_score"])
 
+
+    st.markdown("---")
+    st.write("Enter customer details below to predict churn.")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        age = st.number_input("Age", min_value=10, max_value=100, value=30)
+        state = st.selectbox("State", sorted(df["State"].dropna().unique()))
+        mtn_device = st.selectbox("MTN Device", sorted(df["MTN Device"].dropna().unique()))
+        gender = st.selectbox("Gender", sorted(df["Gender"].dropna().unique()))
+        satisfaction_rate = st.slider("Satisfaction Rate", min_value=1, max_value=5, value=3)
+        customer_review = st.selectbox("Customer Review", sorted(df["Customer Review"].dropna().unique()))
+
+    with col2:
+        tenure = st.number_input("Customer Tenure in months", min_value=0, max_value=120, value=12)
+        subscription_plan = st.selectbox("Subscription Plan", sorted(df["Subscription Plan"].dropna().unique()))
+        unit_price = st.number_input("Unit Price", min_value=0.0, value=5000.0)
+        times_purchased = st.number_input("Number of Times Purchased", min_value=0, value=5)
+        total_revenue = st.number_input("Total Revenue", min_value=0.0, value=50000.0)
+        data_usage = st.number_input("Data Usage", min_value=0.0, value=20.0)
+
+    if st.button("Predict Churn"):
+        input_df = pd.DataFrame([{
+            "Age": age,
+            "State": state,
+            "MTN Device": mtn_device,
+            "Gender": gender,
+            "Satisfaction Rate": satisfaction_rate,
+            "Customer Review": customer_review,
+            "Customer Tenure in months": tenure,
+            "Subscription Plan": subscription_plan,
+            "Unit Price": unit_price,
+            "Number of Times Purchased": times_purchased,
+            "Total Revenue": total_revenue,
+            "Data Usage": data_usage
+        }])
+
+        prediction = model.predict(input_df)[0]
+        probability = model.predict_proba(input_df)[0][1]
+
+        st.markdown("### Prediction Result")
+        if prediction == 1:
+            st.error(f"Customer is likely to churn. Probability: {probability:.2%}")
+        else:
+            st.success(f"Customer is likely to remain. Probability of churn: {probability:.2%}")
 # =============================
 # Raw Data Page
 # =============================

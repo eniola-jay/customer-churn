@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 from backend import load_data, get_metrics, get_filtered_data
 from churn_model import train_churn_model
@@ -21,7 +22,6 @@ st.set_page_config(
 # -----------------------------
 df = load_data()
 
-
 bg_color = "#F7F7F5"
 text_color = "#1F2933"
 card_bg = "#FFFFFF"
@@ -31,6 +31,12 @@ secondary_color = "#E8EFEA"
 muted_color = "#6B7280"
 chart_text = "black"
 sidebar_text = "#1F2933"
+
+# MTN COLORS (NEW)
+mtn_yellow = "#FFCC00"
+mtn_green = "#008751"
+mtn_green_soft = "#A6D6A8"
+mtn_yellow_soft = "#FFE680"
 
 # -----------------------------
 # Custom CSS
@@ -54,7 +60,7 @@ st.markdown(f"""
 .hero-box {{
     background: linear-gradient(135deg, {card_bg}, {secondary_color});
     padding: 22px;
-    border-radius: 18px;
+    border-radius: 25px;
     border: 1px solid {border_color};
     margin-bottom: 18px;
 }}
@@ -76,10 +82,58 @@ st.markdown(f"""
     margin-bottom: 10px;
 }}
 
+div[data-testid="stMetric"] {{
+    background-color: {card_bg};
+    border: 1.5px solid #C9D7CB;
+    border-radius: 20px;
+    padding: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}}
+
+div[data-testid="stMetricLabel"] {{
+    color: {muted_color} !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+}}
+
+div[data-testid="stMetricValue"] {{
+    color: {primary_color} !important;
+    font-size: 30px !important;
+    font-weight: 1000 !important;
+}}
+
 .stButton > button {{
     background-color: {primary_color};
     color: white;
     border-radius: 10px;
+}}
+
+.chart-container {{
+    width: 100%;
+    background: #FFFFFF;
+    border-radius: 25px;
+    padding: 12px;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}}
+.chart-title {{
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1F2933;
+}}
+
+.st-emotion-cache-pa57uv img{{
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    border:5px solid #E5E7EB;
+}}
+.st-emotion-cache-pa57uv img:hover{{
+    border:5px solid #4F6F52;
+    box-shadow: 0 4px 12px rgba(79, 111, 82, 0.2);
+    transform: scale(1.02) translateY(-2px);
+    transition: all 0.5s ease;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -89,8 +143,8 @@ st.markdown(f"""
 # -----------------------------
 with st.sidebar:
     st.image(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/MTN_Logo.svg/800px-MTN_Logo.svg.png",
-        width=90
+        "./mtn-new-logo.svg",
+        width=50
     )
 
     st.markdown("## Navigation")
@@ -149,30 +203,120 @@ if page == "Dashboard":
     m3.metric("Churn Rate", f'{metrics["churn_rate"]}%')
     m4.metric("Total Revenue", f'₦{metrics["total_revenue"]:,.0f}')
 
-    chart1, chart2 = st.columns(2)
+    # -----------------------------
+    # Visual Insights
+    # -----------------------------
+    st.markdown("## Visual Insights")
 
+    chart1, chart2 = st.columns(2, gap="large", vertical_alignment="top")
+
+
+    # -----------------------------
+    # Churn Distribution
+    # -----------------------------
     with chart1:
+
         st.markdown("#### Churn Distribution")
+
         churn_dist = filtered_df["Customer Churn Status"].value_counts()
 
-        fig1, ax1 = plt.subplots(figsize=(5, 5))
-        ax1.pie(
+        fig1, ax1 = plt.subplots(figsize=(4, 3))
+
+        colors = [mtn_green, mtn_yellow]
+
+        wedges, texts, autotexts = ax1.pie(
             churn_dist,
             labels=churn_dist.index,
             autopct="%1.1f%%",
-            startangle=90
+            startangle=90,
+            colors=colors,
+            wedgeprops={"linewidth": 1, "edgecolor": "white"},
+            textprops={"fontsize": 7}
         )
-        st.pyplot(fig1)
 
+        for autotext in autotexts:
+            autotext.set_color("#1F2933")
+            autotext.set_fontweight("medium")
+
+        ax1.set_facecolor("#FFFFFF")
+        fig1.patch.set_facecolor("#FFFFFF")
+        ax1.set_aspect("equal")
+
+        st.pyplot(fig1, use_container_width=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # -----------------------------
+    # Top Churn Drivers
+    # -----------------------------
     with chart2:
-        st.markdown("#### Customer Tenure Histogram")
 
-        fig2, ax2 = plt.subplots(figsize=(6, 5))
-        ax2.hist(
-            filtered_df["Customer Tenure in months"].dropna(),
-            bins=15
+        st.markdown("#### Top Drivers")
+
+        churned_df = df[df["Customer Churn Status"] == "Yes"].copy()
+
+        churned_df["Reasons for Churn"] = (
+            churned_df["Reasons for Churn"]
+            .astype(str)
+            .str.strip()
+            .str.lower()
         )
-        st.pyplot(fig2)
+
+        ordered_reasons = [
+            "high call tarrifs",
+            "relocation",
+            "costly data plan",
+            "fast data consumption",
+            "poor network",
+            "better offers from competitors",
+            "poor customers service"
+        ]
+
+        reason_counts = (
+            churned_df["Reasons for Churn"]
+            .value_counts()
+            .reindex(ordered_reasons, fill_value=0)
+        )
+
+        short_labels = [
+            "Tariffs",
+            "Relocation",
+            "Data Plan",
+            "Data Use",
+            "Network",
+            "Competitors",
+            "Service"
+        ]
+
+        fig2, ax2 = plt.subplots(figsize=(4, 3.75))
+
+        bars = ax2.bar(
+            short_labels,
+            reason_counts.values,
+            width=0.55
+        )
+
+        for i, bar in enumerate(bars):
+            if i % 2 == 0:
+                bar.set_color(mtn_green)
+            else:
+                bar.set_color(mtn_yellow)
+
+            bar.set_edgecolor("white")
+            bar.set_linewidth(1.2)
+
+        ax2.set_facecolor("#FFFFFF")
+        fig2.patch.set_facecolor("#FFFFFF")
+
+        ax2.tick_params(axis="x", labelsize=7, rotation=25)
+        ax2.tick_params(axis="y", labelsize=7)
+
+        for spine in ax2.spines.values():
+            spine.set_visible(False)
+
+        st.pyplot(fig2, use_container_width=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # =============================
 # Predictions Page
@@ -193,7 +337,6 @@ elif page == "Predictions":
     a2.metric("Precision", model_metrics["precision"])
     a3.metric("Recall", model_metrics["recall"])
     a4.metric("F1 Score", model_metrics["f1_score"])
-
 
     st.markdown("---")
     st.write("Enter customer details below to predict churn.")
@@ -240,6 +383,7 @@ elif page == "Predictions":
             st.error(f"Customer is likely to churn. Probability: {probability:.2%}")
         else:
             st.success(f"Customer is likely to remain. Probability of churn: {probability:.2%}")
+
 # =============================
 # Raw Data Page
 # =============================

@@ -10,10 +10,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 def train_churn_model(df):
     data = df.copy()
 
-    # Convert target column to numeric
-    data["Customer Churn Status"] = data["Customer Churn Status"].map({"Yes": 1, "No": 0})
+    # UPDATED MAP SCHEMA: Map "Churned" to 1, while tracking "No" and "Active" as 0
+    data["Customer Churn Status"] = data["Customer Churn Status"].map({
+        "Churned": 1, 
+        "No": 0, 
+        "Active": 0
+    })
 
-    # Drop rows with missing target
+    # Drop rows with missing target labels (e.g., actual missing records/NaNs)
     data = data.dropna(subset=["Customer Churn Status"])
 
     # Features to use

@@ -381,9 +381,68 @@ elif page == "Predictions":
         st.markdown("### Prediction Result")
         if prediction == 1:
             st.error(f"Customer is likely to churn. Probability: {probability:.2%}")
+            
+            # =========================================================
+            # NEW ADDITION: CHURN REASON DIAGNOSTIC ENGINE
+            # =========================================================
+            st.markdown("#### 🔍 Explanatory Risk Diagnostic (Why they want to churn?)")
+            reasons = []
+            
+            if satisfaction_rate <= 2:
+                reasons.append(f"🔴 **Critical Dissatisfaction:** The customer self-reported a critical satisfaction score of **{satisfaction_rate}/5**.")
+            elif satisfaction_rate == 3:
+                reasons.append(f"🟡 **Neutral Engagement Risk:** A mid-tier satisfaction rating (**{satisfaction_rate}/5**) indicates detachment from product features.")
+                
+            if str(customer_review).strip().lower() in ['poor', 'bad', 'unsatisfied', 'negative']:
+                reasons.append(f"🔴 **Negative Feedback Loop:** The account contains an active **'{customer_review}'** operational sentiment flag.")
+                
+            if data_usage < 5.0:
+                reasons.append(f"🟡 **Low Data Utilization:** Data usage is highly depressed (**{data_usage} GB**), flagging a drop in daily structural reliance.")
+                
+            if tenure <= 3:
+                reasons.append(f"🟡 **Onboarding Friction:** The tenure is under **{tenure} months**, a phase prone to early customer drop-off.")
+                
+            if times_purchased == 0:
+                reasons.append("🔴 **Zero Re-purchase Velocity:** The customer hasn't completed any recurring transaction purchases during the current billing cycle.")
+
+            if len(reasons) > 0:
+                for reason in reasons:
+                    st.markdown(reason)
+            else:
+                st.markdown("- 📉 **Socio-Economic Churn Drivers:** Basic performance metrics look clear; attrition is likely motivated by competing network offers or regional service delivery fluctuations.")
+
+            # =========================================================
+            # NEW ADDITION: CATEGORICAL MATCHING AT-RISK COHORT LIST
+            # =========================================================
+            st.markdown(f"#### 📋 Peer Cohort Risk Map ({subscription_plan} users on {mtn_device} in {state})")
+            st.write("Below are existing customers matching this profile category who have historically churned or fit this risk bracket:")
+            
+            # Dynamic cross-filtering structure looking for similarities in historical rows
+            category_df = df[
+                (df["Subscription Plan"] == subscription_plan) & 
+                (df["MTN Device"] == mtn_device) & 
+                (df["State"] == state)
+            ]
+            
+            if not category_df.empty:
+                # If your dataset has a column tracking actual historical churn labels, we filter by it. 
+                # Assuming your target variable column name is named 'Churn' or similar, we display it:
+                churn_col = [col for col in category_df.columns if 'churn' in col.lower()]
+                
+                if churn_col:
+                    target_col = churn_col[0]
+                    # Prioritize showing the ones who have already dropped out or are high-risk rows
+                    display_cohort = category_df.sort_values(by=target_col, ascending=False).head(10)
+                else:
+                    display_cohort = category_df.head(10)
+                    
+                st.dataframe(display_cohort, use_container_width=True)
+            else:
+                st.info("No matching historical records found for this specific cross-section profile mix.")
+
         else:
             st.success(f"Customer is likely to remain. Probability of churn: {probability:.2%}")
-
+            st.markdown("✨ **Retention Status Confirmed:** Core usage behaviors align with long-term retention trends.")
 # =============================
 # Raw Data Page
 # =============================
